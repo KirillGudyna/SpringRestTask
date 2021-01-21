@@ -1,0 +1,5 @@
+rootProject.name = 'SpringRestTask'
+include 'api'
+include 'dao'
+include 'service'
+
