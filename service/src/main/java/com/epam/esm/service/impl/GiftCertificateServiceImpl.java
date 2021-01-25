@@ -9,20 +9,14 @@ import com.epam.esm.model.dao.impl.GiftCertificateDaoImpl;
 import com.epam.esm.model.entity.GiftCertificate;
 import com.epam.esm.model.entity.Tag;
 import com.epam.esm.service.GiftCertificateService;
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class GiftCertificateServiceImpl implements GiftCertificateService {
@@ -62,31 +56,29 @@ public class GiftCertificateServiceImpl implements GiftCertificateService {
     }
 
     public Optional<GiftCertificate> findById(long id) {
-        return this.giftCertificateDao.findById(id);
+        return giftCertificateDao.findById(id);
     }
 
     public List<GiftCertificate> findAll() {
-        return this.giftCertificateDao.findAll();
+        return giftCertificateDao.findAll();
     }
 
     public GiftCertificate add(GiftCertificate certificate) {
-        String currentDate = this.getCurrentDateIso();
-        certificate.setCreateDate(Timestamp.valueOf(currentDate));
-        certificate.setLastUpdateDate(Timestamp.valueOf(currentDate));
-        return (GiftCertificate)this.transactionTemplate.execute((transactionStatus) -> {
-            GiftCertificate added = this.giftCertificateDao.add(certificate);
-            this.addTags(added, certificate.getTags());
-            return added;
+        String currentDate = getCurrentDateIso();
+        certificate.setCreateDate(currentDate);
+        certificate.setLastUpdateDate(currentDate);
+        return transactionTemplate.execute(transactionStatus -> {
+            GiftCertificate addedCertificate = giftCertificateDao.add(certificate);
+            addTags(addedCertificate, certificate.getTags());
+            return addedCertificate;
         });
     }
 
     private void addTags(GiftCertificate added, List<Tag> tags) {
         if (tags != null && !tags.isEmpty()) {
-            Iterator var3 = tags.iterator();
 
-            while(var3.hasNext()) {
-                Tag tag = (Tag)var3.next();
-                Tag addedTag = this.addTag(added.getId(), tag);
+            for (Tag tag : tags) {
+                Tag addedTag = addTag(added.getId(), tag);
                 added.addTag(addedTag);
             }
         }
@@ -94,63 +86,60 @@ public class GiftCertificateServiceImpl implements GiftCertificateService {
     }
 
     private Tag addTag(long certificateId, Tag tag) {
-        Optional<Tag> optionalTag = this.tagDao.findByName(tag.getName());
-        Tag addedTag = (Tag)optionalTag.orElseGet(() -> {
-            return this.tagDao.add(tag);
-        });
-        this.giftCertificateTagDao.add(certificateId, addedTag.getId());
+        Optional<Tag> optionalTag = tagDao.findByName(tag.getName());
+        Tag addedTag = optionalTag.orElseGet(() -> tagDao.add(tag));
+        giftCertificateTagDao.add(certificateId, addedTag.getId());
         return addedTag;
     }
 
     public Optional<GiftCertificate> update(GiftCertificate certificate) {
-        Optional<GiftCertificate> optional = this.giftCertificateDao.findById(certificate.getId());
+        Optional<GiftCertificate> optional = giftCertificateDao.findById(certificate.getId());
         if (optional.isPresent()) {
-            GiftCertificate found = (GiftCertificate)optional.get();
-            this.updateNotEmptyFields(certificate, found);
-            certificate.setLastUpdateDate(Timestamp.valueOf(this.getCurrentDateIso()));
-            GiftCertificate updated = (GiftCertificate)this.transactionTemplate.execute((transactionStatus) -> {
-                GiftCertificate updating = this.giftCertificateDao.update(found);
+            GiftCertificate foundCertificate = optional.get();
+            updateNotEmptyFields(certificate, foundCertificate);
+            certificate.setLastUpdateDate(getCurrentDateIso());
+            GiftCertificate updatedCertificate = transactionTemplate.execute(transactionStatus -> {
+                GiftCertificate updatingCertificate = giftCertificateDao.update(foundCertificate);
                 if (certificate.getTags() != null) {
-                    this.giftCertificateTagDao.deleteAllTags(updating.getId());
-                    updating.clearAllTags();
-                    this.addTags(updating, certificate.getTags());
+                    giftCertificateTagDao.deleteAllTags(updatingCertificate.getId());
+                    updatingCertificate.clearAllTags();
+                    addTags(updatingCertificate, certificate.getTags());
                 }
-
-                return updating;
+                return updatingCertificate;
             });
-            optional = Optional.of(updated);
+            optional = Optional.ofNullable(updatedCertificate);
         }
 
         return optional;
     }
 
-    private void updateNotEmptyFields(GiftCertificate source, GiftCertificate found) {
+    private void updateNotEmptyFields(GiftCertificate source, GiftCertificate foundCertificate) {
         if (source.getName() != null) {
-            found.setName(source.getName());
+            foundCertificate.setName(source.getName());
         }
 
         if (source.getDescription() != null) {
-            found.setDescription(source.getDescription());
+            foundCertificate.setDescription(source.getDescription());
         }
 
         if (source.getPrice() != null) {
-            found.setPrice(source.getPrice());
+            foundCertificate.setPrice(source.getPrice());
         }
 
         if (source.getDuration() != null) {
-            found.setDuration(source.getDuration());
+            foundCertificate.setDuration(source.getDuration());
         }
 
         if (source.getTags() != null) {
-            found.setTags(source.getTags());
+            foundCertificate.setTags(source.getTags());
         }
 
     }
 
     public boolean delete(long id) {
-        return (Boolean)this.transactionTemplate.execute((transactionStatus) -> {
-            this.giftCertificateTagDao.deleteAllTags(id);
-            return this.giftCertificateDao.delete(id);
+        return transactionTemplate.execute(transactionStatus-> {
+            giftCertificateTagDao.deleteAllTags(id);
+            return giftCertificateDao.delete(id);
         });
     }
 
@@ -162,20 +151,20 @@ public class GiftCertificateServiceImpl implements GiftCertificateService {
     }
 
     public List<GiftCertificate> findByTagName(String tagName, String sortType, String direction) {
-        List<GiftCertificate> certificates = this.giftCertificateDao.findByTagName(tagName);
-        this.sortIfNecessary(certificates, sortType, direction);
+        List<GiftCertificate> certificates = giftCertificateDao.findByTagName(tagName);
+        sortIfNecessary(certificates, sortType, direction);
         return certificates;
     }
 
     public List<GiftCertificate> findByName(String name, String sortType, String direction) {
-        List<GiftCertificate> certificates = this.giftCertificateDao.findByName(name);
-        this.sortIfNecessary(certificates, sortType, direction);
+        List<GiftCertificate> certificates = giftCertificateDao.findByName(name);
+        sortIfNecessary(certificates, sortType, direction);
         return certificates;
     }
 
     public List<GiftCertificate> findByDescription(String description, String sortType, String direction) {
-        List<GiftCertificate> certificates = this.giftCertificateDao.findByDescription(description);
-        this.sortIfNecessary(certificates, sortType, direction);
+        List<GiftCertificate> certificates = giftCertificateDao.findByDescription(description);
+        sortIfNecessary(certificates, sortType, direction);
         return certificates;
     }
 

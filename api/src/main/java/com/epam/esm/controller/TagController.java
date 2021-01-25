@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package com.epam.esm.controller;
 
 import com.epam.esm.controller.exception.GiftEntityNotFoundException;
@@ -19,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({"api/tags"})
+@RequestMapping("tags")
 public class TagController {
     private TagService service;
 
@@ -33,11 +28,9 @@ public class TagController {
         return this.service.findAll();
     }
 
-    @GetMapping({"/{id}"})
+    @GetMapping("/{id}")
     public Tag findById(@PathVariable long id) {
-        return (Tag)this.service.findById(id).orElseThrow(() -> {
-            return new GiftEntityNotFoundException("Tag not found", 40402);
-        });
+        return service.findById(id).orElseThrow(() -> new GiftEntityNotFoundException("Tag not found", 40402));
     }
 
     @PostMapping
@@ -45,8 +38,8 @@ public class TagController {
         return this.service.add(tag);
     }
 
-    @DeleteMapping({"/{id}"})
+    @DeleteMapping("/{id}")
     public boolean delete(@PathVariable int id) {
-        return this.service.delete((long)id);
+        return this.service.delete(id);
     }
 }

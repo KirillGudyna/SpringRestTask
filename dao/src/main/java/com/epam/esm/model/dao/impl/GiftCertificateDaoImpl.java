@@ -4,18 +4,9 @@ import com.epam.esm.model.dao.GiftCertificateDao;
 import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.GiftCertificate;
 import com.epam.esm.model.entity.Tag;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+import com.epam.esm.model.util.ColumnName;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -23,7 +14,17 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 @Repository
+@ComponentScan("com.epam.esm.model.config")
 public class GiftCertificateDaoImpl implements GiftCertificateDao {
     private static final String SQL_SELECT_ALL_CERTIFICATES = "SELECT id, name, description, price, duration, create_date, last_update_date FROM gift_certificate";
     private static final String SQL_SELECT_ALL_CERTIFICATES_BY_ID = "SELECT id, name, description, price, duration, create_date, last_update_date FROM gift_certificate\nWHERE id = ?";
@@ -48,9 +49,9 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     }
 
     public Optional<GiftCertificate> findById(long id) {
-        Optional optional;
+        Optional<GiftCertificate> optional;
         try {
-            GiftCertificate giftCertificate = this.jdbcTemplate.queryForObject(SQL_SELECT_ALL_CERTIFICATES_BY_ID, new GiftCertificateRowMapper(), new Object[]{id});
+            GiftCertificate giftCertificate = this.jdbcTemplate.queryForObject(SQL_SELECT_ALL_CERTIFICATES_BY_ID, new GiftCertificateRowMapper(), id);
             List<Tag> tags = this.tagDao.findAllTags(id);
             giftCertificate.setTags(tags);
             optional = Optional.of(giftCertificate);
@@ -62,28 +63,28 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     }
 
     public List<GiftCertificate> findAll() {
-        List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(SQL_SELECT_ALL_CERTIFICATES);
-        return this.getGiftCertificates(rows);
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_ALL_CERTIFICATES);
+        return getGiftCertificates(rows);
     }
 
     public GiftCertificate add(GiftCertificate entity) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        this.jdbcTemplate.update((connection) -> {
-            PreparedStatement ps = connection.prepareStatement(SQL_INSERT, 1);
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, entity.getName());
             ps.setString(2, entity.getDescription());
             ps.setInt(3, entity.getPrice() != null ? entity.getPrice() : 0);
             ps.setInt(4, entity.getDuration() != null ? entity.getDuration() : 0);
-            ps.setTimestamp(5, entity.getCreateDate());
-            ps.setTimestamp(6, entity.getLastUpdateDate());
+            ps.setString(5, entity.getCreateDate());
+            ps.setString(6, entity.getLastUpdateDate());
             return ps;
         }, keyHolder);
-        return this.findById(keyHolder.getKey().longValue()).get();
+        return findById(keyHolder.getKey().longValue()).get();
     }
 
     public GiftCertificate update(GiftCertificate entity) {
-        this.jdbcTemplate.update(SQL_UPDATE, entity.getName(), entity.getDescription(), entity.getPrice(), entity.getDuration(), entity.getLastUpdateDate(), entity.getId());
-        return this.findById(entity.getId()).get();
+        jdbcTemplate.update(SQL_UPDATE, entity.getName(), entity.getDescription(), entity.getPrice(), entity.getDuration(), entity.getLastUpdateDate(), entity.getId());
+        return findById(entity.getId()).get();
     }
 
     public boolean delete(long id) {
@@ -106,19 +107,17 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     }
 
     private List<GiftCertificate> getGiftCertificates(List<Map<String, Object>> rows) {
-        List<GiftCertificate> certificates = new ArrayList();
-        Iterator var3 = rows.iterator();
+        List<GiftCertificate> certificates = new ArrayList<>();
 
-        while (var3.hasNext()) {
-            Map<String, Object> row = (Map) var3.next();
+        for (Map<String, Object> row : rows) {
             GiftCertificate giftCertificate = new GiftCertificate();
             giftCertificate.setId((Long) row.get("id"));
             giftCertificate.setName((String) row.get("name"));
             giftCertificate.setDescription((String) row.get("description"));
             giftCertificate.setPrice((Integer) row.get("price"));
             giftCertificate.setDuration((Integer) row.get("duration"));
-            giftCertificate.setCreateDate((Timestamp) row.get("create_date"));
-            giftCertificate.setLastUpdateDate((Timestamp) row.get("last_update_date"));
+            giftCertificate.setCreateDate((String) row.get("create_date"));
+            giftCertificate.setLastUpdateDate((String) row.get("last_update_date"));
             List<Tag> tags = this.tagDao.findAllTags(giftCertificate.getId());
             giftCertificate.setTags(tags);
             certificates.add(giftCertificate);
@@ -127,19 +126,19 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
         return certificates;
     }
 
-    private class GiftCertificateRowMapper implements RowMapper<GiftCertificate> {
+    private static class GiftCertificateRowMapper implements RowMapper<GiftCertificate> {
         private GiftCertificateRowMapper() {
         }
 
         public GiftCertificate mapRow(ResultSet resultSet, int i) throws SQLException {
             GiftCertificate certificate = new GiftCertificate();
-            certificate.setId(resultSet.getLong("id"));
-            certificate.setName(resultSet.getString("name"));
-            certificate.setDescription(resultSet.getString("description"));
-            certificate.setPrice(resultSet.getInt("price"));
-            certificate.setDuration(resultSet.getInt("duration"));
-            certificate.setCreateDate(Timestamp.valueOf(resultSet.getString("create_date")));
-            certificate.setLastUpdateDate(Timestamp.valueOf(resultSet.getString("last_update_date")));
+            certificate.setId(resultSet.getLong(ColumnName.GIFT_CERTIFICATE_ID));
+            certificate.setName(resultSet.getString(ColumnName.GIFT_CERTIFICATE_NAME));
+            certificate.setDescription(resultSet.getString(ColumnName.GIFT_CERTIFICATE_DESCRIPTION));
+            certificate.setPrice(resultSet.getInt(ColumnName.GIFT_CERTIFICATE_PRICE));
+            certificate.setDuration(resultSet.getInt(ColumnName.GIFT_CERTIFICATE_DURATION));
+            certificate.setCreateDate(resultSet.getString(ColumnName.GIFT_CERTIFICATE_CREATE_DATE));
+            certificate.setLastUpdateDate(resultSet.getString(ColumnName.GIFT_CERTIFICATE_LAST_UPDATE_DATE));
             return certificate;
         }
     }

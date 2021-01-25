@@ -1,6 +1,6 @@
 package com.epam.esm.service.impl;
 
-import com.epam.esm.data_provider.StaticDataProvider;
+import com.epam.esm.dataprovider.StaticDataProvider;
 import com.epam.esm.model.dao.CertificateTagDao;
 import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.Tag;

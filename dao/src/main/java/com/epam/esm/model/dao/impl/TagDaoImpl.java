@@ -2,15 +2,8 @@ package com.epam.esm.model.dao.impl;
 
 import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.Tag;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -18,6 +11,15 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Repository
 @Transactional
@@ -27,11 +29,8 @@ public class TagDaoImpl implements TagDao {
     public static final String SELECT_ID_NAME_FROM_TAG_WHERE_NAME = "SELECT id, name FROM tag WHERE name = ?";
     public static final String INSERT_INTO_TAG_NAME_VALUES = "INSERT INTO tag (name) VALUES (?)";
     public static final String DELETE_FROM_TAG_WHERE_ID = "DELETE FROM tag WHERE id = ?";
-    public static final String SQL_ALL_CERTIFICATE_TAGS = "SELECT id, name FROM gift_to_tag JOIN tag ON tag_id = id WHERE gift_certificate_id = ?";
+    public static final String SELECT_ALL_CERTIFICATE_TAGS = "SELECT id, name FROM gift_to_tag JOIN tag ON tag_id = id WHERE gift_certificate_id = ?";
     private JdbcTemplate jdbcTemplate;
-
-    public TagDaoImpl() {
-    }
 
     @Autowired
     public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
@@ -39,15 +38,13 @@ public class TagDaoImpl implements TagDao {
     }
 
     public List<Tag> findAll() {
-        List<Tag> tags = new ArrayList();
+        List<Tag> tags = new ArrayList<>();
         List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(SELECT_ID_NAME_FROM_TAG);
-        Iterator var3 = rows.iterator();
 
-        while(var3.hasNext()) {
-            Map<String, Object> row = (Map)var3.next();
+        for (Map<String, Object> stringObjectMap : rows) {
             Tag tag = new Tag();
-            tag.setId((Long)row.get("id"));
-            tag.setName((String)row.get("name"));
+            tag.setId((Long) stringObjectMap.get("id"));
+            tag.setName((String) stringObjectMap.get("name"));
             tags.add(tag);
         }
 
@@ -55,10 +52,10 @@ public class TagDaoImpl implements TagDao {
     }
 
     public Optional<Tag> findById(long id) {
-        Optional optional;
+        Optional<Tag> optional;
         try {
-            Tag tag = (Tag)this.jdbcTemplate.queryForObject(SELECT_ID_NAME_FROM_TAG_WHERE_ID, new TagDaoImpl.TagRowMapper(), new Object[]{id});
-            optional = Optional.of(tag);
+            Tag tag = jdbcTemplate.queryForObject(SELECT_ID_NAME_FROM_TAG_WHERE_ID, new TagDaoImpl.TagRowMapper(), id);
+            optional = Optional.ofNullable(tag);
         } catch (EmptyResultDataAccessException var5) {
             optional = Optional.empty();
         }
@@ -67,10 +64,10 @@ public class TagDaoImpl implements TagDao {
     }
 
     public Optional<Tag> findByName(String name) {
-        Optional optional;
+        Optional<Tag> optional;
         try {
-            Tag tag = (Tag)this.jdbcTemplate.queryForObject(SELECT_ID_NAME_FROM_TAG_WHERE_NAME, new TagDaoImpl.TagRowMapper(), new Object[]{name});
-            optional = Optional.of(tag);
+            Tag tag = this.jdbcTemplate.queryForObject(SELECT_ID_NAME_FROM_TAG_WHERE_NAME, new TagDaoImpl.TagRowMapper(), name);
+            optional = Optional.ofNullable(tag);
         } catch (EmptyResultDataAccessException var4) {
             optional = Optional.empty();
         }
@@ -80,27 +77,25 @@ public class TagDaoImpl implements TagDao {
 
     public Tag add(Tag entity) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        this.jdbcTemplate.update((connection) -> {
-            PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TAG_NAME_VALUES, 1);
+        this.jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TAG_NAME_VALUES, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, entity.getName());
             return ps;
         }, keyHolder);
-        return (Tag)this.findById(keyHolder.getKey().longValue()).get();
+        return this.findById(keyHolder.getKey().longValue()).get();
     }
 
     public boolean delete(long id) {
-        return this.jdbcTemplate.update(DELETE_FROM_TAG_WHERE_ID, new Object[]{id}) > 0;
+        return this.jdbcTemplate.update(DELETE_FROM_TAG_WHERE_ID, id) > 0;
     }
 
     public List<Tag> findAllTags(long certificateId) {
-        List<Tag> tags = new ArrayList();
-        List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(SQL_ALL_CERTIFICATE_TAGS, new Object[]{certificateId});
-        Iterator var5 = rows.iterator();
+        List<Tag> tags = new ArrayList<>();
+        List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(SELECT_ALL_CERTIFICATE_TAGS, certificateId);
 
-        while(var5.hasNext()) {
-            Map<String, Object> row = (Map)var5.next();
-            long tagId = (Long)row.get("id");
-            String tagName = (String)row.get("name");
+        for (Map<String, Object> stringObjectMap : rows) {
+            long tagId = (Long) stringObjectMap.get("id");
+            String tagName = (String) stringObjectMap.get("name");
             tags.add(new Tag(tagId, tagName));
         }
 

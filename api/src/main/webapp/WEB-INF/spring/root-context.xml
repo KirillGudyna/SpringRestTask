@@ -12,15 +12,11 @@
 
     <context:annotation-config />
     <tx:annotation-driven />
+    <tx:annotation-driven proxy-target-class="true"/>
 
-    <import resource="../../META-INF/spring/datasource-jdbc.xml" />
-
-    <tx:annotation-driven proxy-target-class="true"
-                          transaction-manager="transactionManager" />
-
-    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <!--bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="webDataSource"/>
-    </bean>
+    </bean-->
 
     <context:component-scan base-package="com.epam.esm.service.impl"/>
     <context:component-scan base-package="com.epam.esm.controller"/>

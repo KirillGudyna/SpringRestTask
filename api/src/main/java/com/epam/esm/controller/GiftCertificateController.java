@@ -8,18 +8,10 @@ import com.epam.esm.validation.GiftCertificateValidator;
 import com.epam.esm.validation.TagValidator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/certificates")
+@RequestMapping("certificates")
 public class GiftCertificateController {
     private GiftCertificateService service;
 
@@ -43,10 +35,10 @@ public class GiftCertificateController {
         return this.service.add(certificate);
     }
 
-    @PutMapping("/{id:^[1-9]\\d{0,18}$}")
+    @PatchMapping("/{id:^[1-9]\\d{0,18}$}")
     public GiftCertificate update(@RequestBody GiftCertificate certificate, @PathVariable long id) {
         certificate.setId(id);
-        return this.service.update(certificate).orElseThrow(() -> new GiftEntityNotFoundException("Certificate not found", 40401));
+        return service.update(certificate).orElseThrow(() -> new GiftEntityNotFoundException("Certificate not found", 40401));
     }
 
     @DeleteMapping("/{id:^[1-9]\\d{0,18}$}")

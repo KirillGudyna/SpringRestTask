@@ -2,8 +2,6 @@ package com.epam.esm.model.dao.impl;
 
 import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.Tag;
-import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,18 +11,19 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
+import java.util.List;
+import java.util.Optional;
+
 class TagDaoTest {
     private TagDao tagDao;
     private EmbeddedDatabase embeddedDatabase;
 
-    TagDaoTest() {
-    }
 
     @BeforeEach
     void setUp() {
         this.embeddedDatabase = (new EmbeddedDatabaseBuilder()).addDefaultScripts().setType(EmbeddedDatabaseType.H2).build();
+        tagDao =new TagDaoImpl();
         JdbcTemplate jdbcTemplate = new JdbcTemplate(this.embeddedDatabase);
-        this.tagDao = new TagDaoImpl();
         ((TagDaoImpl)this.tagDao).setJdbcTemplate(jdbcTemplate);
     }
 

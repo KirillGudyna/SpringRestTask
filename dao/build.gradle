@@ -10,7 +10,6 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
     compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.23'
     compile group: 'org.springframework', name: 'spring-jdbc', version: '5.3.3'
     compile group: 'org.springframework', name: 'spring-core', version: '5.3.3'
@@ -20,8 +19,15 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-webmvc', version: '5.3.3'
     compile group: 'org.codehaus.jackson', name: 'jackson-mapper-lgpl', version: '1.9.13'
     compile group: 'org.springframework', name: 'spring-tx', version: '5.3.3'
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.4.5'
+    testCompile group: 'org.springframework', name: 'spring-test', version: '5.3.3'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.7.0'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '3.7.7'
     testCompile group: 'org.junit.platform', name: 'junit-platform-runner', version: '1.7.0'
     testCompile group: 'com.h2database', name: 'h2', version: '1.4.200'
+}
+
+test {
+    useJUnitPlatform()
 }

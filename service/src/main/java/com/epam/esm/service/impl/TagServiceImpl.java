@@ -4,12 +4,13 @@ import com.epam.esm.model.dao.CertificateTagDao;
 import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.Tag;
 import com.epam.esm.service.TagService;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TagServiceImpl implements TagService {
@@ -42,21 +43,21 @@ public class TagServiceImpl implements TagService {
     }
 
     public Optional<Tag> findById(long id) {
-        return this.dao.findById(id);
+        return dao.findById(id);
     }
 
     public List<Tag> findAll() {
-        return this.dao.findAll();
+        return dao.findAll();
     }
 
     public Tag add(Tag entity) {
-        return this.dao.add(entity);
+        return dao.add(entity);
     }
 
     public boolean delete(long id) {
-        return (Boolean)this.transactionTemplate.execute((transactionStatus) -> {
-            this.giftCertificateTagDao.deleteByTagId(id);
-            return this.dao.delete(id);
+        return this.transactionTemplate.execute(transactionStatus -> {
+            giftCertificateTagDao.deleteByTagId(id);
+            return dao.delete(id);
         });
     }
 }

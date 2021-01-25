@@ -1,6 +1,5 @@
 package com.epam.esm.model.entity;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -11,8 +10,8 @@ public class GiftCertificate {
     private String description;
     private Integer price;
     private Integer duration;
-    private Timestamp createDate;
-    private Timestamp lastUpdateDate;
+    private String createDate;
+    private String lastUpdateDate;
     private List<Tag> tags;
 
     public GiftCertificate() {
@@ -27,10 +26,8 @@ public class GiftCertificate {
         this.createDate = certificate.createDate;
         this.lastUpdateDate = certificate.lastUpdateDate;
         if (certificate.getTags() != null) {
-            this.tags = new ArrayList();
-            certificate.getTags().forEach((t) -> {
-                this.tags.add(new Tag(t.getId(), t.getName()));
-            });
+            this.tags = new ArrayList<>();
+            certificate.getTags().forEach(t -> this.tags.add(new Tag(t.getId(), t.getName())));
         }
 
     }
@@ -75,24 +72,24 @@ public class GiftCertificate {
         this.duration = duration;
     }
 
-    public Timestamp getCreateDate() {
+    public String getCreateDate() {
         return this.createDate;
     }
 
-    public void setCreateDate(Timestamp createDate) {
+    public void setCreateDate(String createDate) {
         this.createDate = createDate;
     }
 
-    public Timestamp getLastUpdateDate() {
+    public String getLastUpdateDate() {
         return this.lastUpdateDate;
     }
 
-    public void setLastUpdateDate(Timestamp lastUpdateDate) {
+    public void setLastUpdateDate(String lastUpdateDate) {
         this.lastUpdateDate = lastUpdateDate;
     }
 
     public List<Tag> getTags() {
-        return this.tags != null ? new ArrayList(this.tags) : null;
+        return this.tags != null ? new ArrayList<>(this.tags) : null;
     }
 
     public void setTags(List<Tag> tags) {
@@ -100,7 +97,7 @@ public class GiftCertificate {
     }
 
     public void clearAllTags() {
-        this.tags = new ArrayList();
+        this.tags = new ArrayList<>();
     }
 
     public void addTag(Tag tag) {
@@ -111,7 +108,7 @@ public class GiftCertificate {
         if (this == o) {
             return true;
         } else if (o != null && this.getClass() == o.getClass()) {
-            GiftCertificate that = (GiftCertificate)o;
+            GiftCertificate that = (GiftCertificate) o;
             if (!Objects.equals(this.id, that.id)) {
                 return false;
             } else if (!Objects.equals(this.name, that.name)) {
@@ -121,7 +118,7 @@ public class GiftCertificate {
             } else if (!Objects.equals(this.price, that.price)) {
                 return false;
             } else {
-                return !Objects.equals(this.duration, that.duration) ? false : Objects.equals(this.tags, that.tags);
+                return Objects.equals(this.duration, that.duration) && Objects.equals(this.tags, that.tags);
             }
         } else {
             return false;

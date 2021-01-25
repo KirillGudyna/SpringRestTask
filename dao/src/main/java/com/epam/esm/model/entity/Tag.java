@@ -34,15 +34,15 @@ public class Tag {
         if (this == o) {
             return true;
         } else if (o != null && this.getClass() == o.getClass()) {
-            Tag tag = (Tag)o;
-            return this.id != tag.id ? false : Objects.equals(this.name, tag.name);
+            Tag tag = (Tag) o;
+            return this.id == tag.id && Objects.equals(this.name, tag.name);
         } else {
             return false;
         }
     }
 
     public int hashCode() {
-        int result = (int)(this.id ^ this.id >>> 32);
+        int result = (int) (this.id ^ this.id >>> 32);
         result = 31 * result + (this.name != null ? this.name.hashCode() : 0);
         return result;
     }
