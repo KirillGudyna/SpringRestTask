@@ -24,6 +24,9 @@
           p:url="${jdbc.url}"
           p:username="${jdbc.username}"
           p:password="${jdbc.password}"
+          p:maxActive="${jdbc.maxActive}"
+          p:maxIdle="${jdbc.maxIdle}"
+          p:maxWait="${jdbc.maxWait}"
     />
 
     <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">

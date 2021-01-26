@@ -14,9 +14,11 @@
     <tx:annotation-driven />
     <tx:annotation-driven proxy-target-class="true"/>
 
-    <!--bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <import resource="../../META-INF/spring/datasource-jdbc.xml" />
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="webDataSource"/>
-    </bean-->
+    </bean>
 
     <context:component-scan base-package="com.epam.esm.service.impl"/>
     <context:component-scan base-package="com.epam.esm.controller"/>

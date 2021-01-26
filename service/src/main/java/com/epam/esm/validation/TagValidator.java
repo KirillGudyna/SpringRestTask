@@ -9,6 +9,6 @@ public class TagValidator {
     }
 
     public static boolean isNameCorrect(String name) {
-        return Objects.nonNull(name) && name.matches("^[0-9a-zA-Z-_]{1,45}$");
+        return !Objects.nonNull(name) || !name.matches(NAME_PATTERN);
     }
 }

@@ -2,7 +2,7 @@ package com.epam.esm.dataprovider;
 
 import com.epam.esm.model.entity.GiftCertificate;
 import com.epam.esm.model.entity.Tag;
-import java.sql.Timestamp;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -10,7 +10,6 @@ public class StaticDataProvider {
     public static final String ISO_DATE = "2020-12-16T14:48Z";
     public static final Tag TAG;
     public static final Tag ADDING_TAG;
-    public static final Tag UPDATED_TAG;
     public static final GiftCertificate ADDING_CERTIFICATE;
     public static final GiftCertificate GIFT_CERTIFICATE;
     public static final GiftCertificate UPDATED_GIFT_CERTIFICATE;
@@ -21,20 +20,19 @@ public class StaticDataProvider {
     }
 
     static {
-        TAG = new Tag(1, "Вязание");
+        TAG = new Tag(1, "Knitting");
         ADDING_TAG = new Tag();
-        ADDING_TAG.setName("Вязание");
-        UPDATED_TAG = new Tag(TAG.getId(), "Вышивание");
+        ADDING_TAG.setName("Knitting");
         ADDING_CERTIFICATE = new GiftCertificate();
-        ADDING_CERTIFICATE.setName("Курсы вышивания");
-        ADDING_CERTIFICATE.setDescription("Лучшие курсы вышивания от компании Vyazhem Vmeste");
+        ADDING_CERTIFICATE.setName("Embroidery courses");
+        ADDING_CERTIFICATE.setDescription("The best embroidery courses from the company Vyazhem Vmeste");
         ADDING_CERTIFICATE.setDuration(30);
         ADDING_CERTIFICATE.setPrice(100);
         ADDING_CERTIFICATE.setTags(Collections.singletonList(TAG));
         GIFT_CERTIFICATE = new GiftCertificate(ADDING_CERTIFICATE);
         GIFT_CERTIFICATE.setId(1L);
-        GIFT_CERTIFICATE.setCreateDate("2020-12-16T14:48Z");
-        GIFT_CERTIFICATE.setLastUpdateDate("2020-12-16T14:48Z");
+        GIFT_CERTIFICATE.setCreateDate(ISO_DATE);
+        GIFT_CERTIFICATE.setLastUpdateDate(ISO_DATE);
         UPDATED_GIFT_CERTIFICATE = new GiftCertificate(GIFT_CERTIFICATE);
         UPDATED_GIFT_CERTIFICATE.setPrice(60);
         GIFT_CERTIFICATE_LIST = Collections.singletonList(GIFT_CERTIFICATE);

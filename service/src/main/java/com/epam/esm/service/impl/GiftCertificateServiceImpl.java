@@ -20,6 +20,9 @@ import java.util.*;
 
 @Service
 public class GiftCertificateServiceImpl implements GiftCertificateService {
+    private static final String DASH = "-";
+    private static final String UNDER_SCOPE = "_";
+
     private GiftCertificateDao giftCertificateDao;
     private TagDao tagDao;
     private CertificateTagDao giftCertificateTagDao;
@@ -59,8 +62,16 @@ public class GiftCertificateServiceImpl implements GiftCertificateService {
         return giftCertificateDao.findById(id);
     }
 
-    public List<GiftCertificate> findAll() {
-        return giftCertificateDao.findAll();
+    @Override
+    public List<GiftCertificate> findAll(String name,
+                                         String description,
+                                         String tagName,
+                                         String sortType,
+                                         String direction) {
+        if (sortType != null) {
+            sortType = sortType.replace(DASH, UNDER_SCOPE);
+        }
+        return giftCertificateDao.findAll(name, description, tagName, sortType, direction);
     }
 
     public GiftCertificate add(GiftCertificate certificate) {
@@ -137,7 +148,7 @@ public class GiftCertificateServiceImpl implements GiftCertificateService {
     }
 
     public boolean delete(long id) {
-        return transactionTemplate.execute(transactionStatus-> {
+        return transactionTemplate.execute(transactionStatus -> {
             giftCertificateTagDao.deleteAllTags(id);
             return giftCertificateDao.delete(id);
         });

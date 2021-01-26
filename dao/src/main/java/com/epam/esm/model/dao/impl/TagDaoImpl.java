@@ -3,7 +3,6 @@ package com.epam.esm.model.dao.impl;
 import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

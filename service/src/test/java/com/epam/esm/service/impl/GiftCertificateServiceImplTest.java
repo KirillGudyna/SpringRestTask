@@ -42,8 +42,8 @@ class GiftCertificateServiceImplTest {
 
     @Test
     void findAll() {
-        Mockito.when(giftCertificateDao.findAll()).thenReturn(StaticDataProvider.GIFT_CERTIFICATE_LIST);
-        List<GiftCertificate> actual = service.findAll();
+        Mockito.when(giftCertificateDao.findAll(null, null, null, null, null)).thenReturn(StaticDataProvider.GIFT_CERTIFICATE_LIST);
+        List<GiftCertificate> actual = service.findAll(null, null, null, null, null);
         List<GiftCertificate> expected = StaticDataProvider.GIFT_CERTIFICATE_LIST;
         Assertions.assertEquals(actual, expected);
     }
@@ -83,7 +83,7 @@ class GiftCertificateServiceImplTest {
     @Test
     void findByTagName() {
         Mockito.when(giftCertificateDao.findByTagName(ArgumentMatchers.anyString())).thenReturn(StaticDataProvider.GIFT_CERTIFICATE_LIST);
-        List<GiftCertificate> actual = service.findByTagName("OOOO", "price", "desc");
+        List<GiftCertificate> actual = service.findByTagName("Knitting", "price", "desc");
         List<GiftCertificate> expected = StaticDataProvider.GIFT_CERTIFICATE_LIST;
         Assertions.assertEquals(actual, expected);
     }
@@ -91,7 +91,7 @@ class GiftCertificateServiceImplTest {
     @Test
     void findByName() {
         Mockito.when(giftCertificateDao.findByName(ArgumentMatchers.anyString())).thenReturn(StaticDataProvider.GIFT_CERTIFICATE_LIST);
-        List<GiftCertificate> actual = service.findByName("РљСѓСЂСЃС‹", null, null);
+        List<GiftCertificate> actual = service.findByName("Embroidery courses", null, null);
         List<GiftCertificate> expected = StaticDataProvider.GIFT_CERTIFICATE_LIST;
         Assertions.assertEquals(actual, expected);
     }
@@ -99,7 +99,7 @@ class GiftCertificateServiceImplTest {
     @Test
     void findByDescription() {
         Mockito.when(giftCertificateDao.findByDescription(ArgumentMatchers.anyString())).thenReturn(StaticDataProvider.GIFT_CERTIFICATE_LIST);
-        List<GiftCertificate> actual = service.findByDescription("Р›СѓС‡С€РёРµ", null, null);
+        List<GiftCertificate> actual = service.findByDescription("The best embroidery", null, null);
         List<GiftCertificate> expected = StaticDataProvider.GIFT_CERTIFICATE_LIST;
         Assertions.assertEquals(actual, expected);
     }

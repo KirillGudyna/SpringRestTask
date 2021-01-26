@@ -1,6 +1,7 @@
 package com.epam.esm.validation;
 
 import com.epam.esm.model.entity.GiftCertificate;
+
 import java.util.Objects;
 
 public class GiftCertificateValidator {
@@ -21,12 +22,12 @@ public class GiftCertificateValidator {
             builder.append("\n");
         }
 
-        if (!isDescriptionCorrect(certificate.getDescription())) {
+        if (isDescriptionCorrect(certificate.getDescription())) {
             builder.append("incorrect description");
             builder.append("\n");
         }
 
-        if (!isPriceCorrect((double)certificate.getPrice())) {
+        if (!isPriceCorrect((double) certificate.getPrice())) {
             builder.append("incorrect price");
             builder.append("\n");
         }
@@ -40,20 +41,20 @@ public class GiftCertificateValidator {
     }
 
     public static boolean isNameCorrect(String name) {
-        return Objects.nonNull(name) && name.matches("^[0-9a-zA-Z-_]{1,45}$");
+        return Objects.nonNull(name) && name.matches(NAME_PATTERN);
     }
 
     public static boolean isDescriptionCorrect(String description) {
-        return Objects.nonNull(description) && description.matches("[^*<>\\\\/{|}]{0,100}");
+        return !Objects.nonNull(description) || !description.matches(DESCRIPTION_PATTERN);
     }
 
     public static boolean isPriceCorrect(double price) {
-        return price >= 1.0D && price <= 100000.0D;
+        return price >= MIN_PRICE && price <= MAX_PRICE;
     }
 
     public static boolean isDurationCorrect(int duration) {
         boolean result = true;
-        if (duration < 1 || duration > 100) {
+        if (duration < MIN_DURATION || duration > MAX_DURATION) {
             result = false;
         }
 

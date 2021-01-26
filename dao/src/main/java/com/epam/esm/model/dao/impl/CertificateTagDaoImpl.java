@@ -2,7 +2,6 @@ package com.epam.esm.model.dao.impl;
 
 import com.epam.esm.model.dao.CertificateTagDao;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +11,6 @@ import java.util.Map;
 
 @Repository
 @Transactional
-@ComponentScan("com.epam.esm.model.config")
 public class CertificateTagDaoImpl implements CertificateTagDao {
     private static final String SQL_INSERT = "INSERT INTO certificate_tag (gift_certificate_id, tag_id) VALUES (?, ?)";
     private static final String SQL_DELETE = "DELETE FROM certificate_tag WHERE gift_certificate_id = ? AND tag_id = ?";

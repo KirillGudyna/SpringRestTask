@@ -6,7 +6,6 @@ import com.epam.esm.model.entity.GiftCertificate;
 import com.epam.esm.model.entity.Tag;
 import com.epam.esm.model.util.ColumnName;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -24,7 +23,6 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-@ComponentScan("com.epam.esm.model.config")
 public class GiftCertificateDaoImpl implements GiftCertificateDao {
     private static final String SQL_SELECT_ALL_CERTIFICATES = "SELECT id, name, description, price, duration, create_date, last_update_date FROM gift_certificate";
     private static final String SQL_SELECT_ALL_CERTIFICATES_BY_ID = "SELECT id, name, description, price, duration, create_date, last_update_date FROM gift_certificate\nWHERE id = ?";
@@ -34,7 +32,20 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     private static final String SQL_SELECT_CERTIFICATES_BY_TAG_NAME = "SELECT gift_certificate.id, gift_certificate.name, description, price, duration, create_date, last_update_date\nFROM gift_certificate JOIN gift_to_tag ON gift_certificate.id=gift_certificate_id JOIN tag ON tag.id=tag_id\nWHERE tag.name=?";
     private static final String SQL_SELECT_BY_NAME = "SELECT id, name, description, price, duration, create_date, last_update_date\nFROM gift_certificate WHERE name LIKE ?";
     private static final String SQL_SELECT_BY_DESCRIPTION = "SELECT id, name, description, price, duration, create_date, last_update_date\nFROM gift_certificate WHERE description LIKE ?";
+    private static final String SQL_FIND_ALL_JOIN_TABLES =
+            "SELECT DISTINCT g.id, g.name, g.description, g.price, g.duration, g.create_date, g.last_update_date\n" +
+                    "FROM gift_certificate AS g JOIN gift_to_tag as ct ON g.id=ct.gift_certificate_id " +
+                    "JOIN tag AS t ON ct.tag_id=t.id \n";
+
     private static final String PERCENT = "%";
+    private static final String WHERE = "WHERE ";
+    private static final String NAME_LIKE = "g.name LIKE ? ";
+    private static final String DESCRIPTION_LIKE = "description LIKE ? ";
+    private static final String TAG_NAME_EQUALS = "t.name = ? ";
+    private static final String AND = "AND ";
+    private static final String ORDER_BY = "ORDER BY ";
+    private static final String SPACE = " ";
+
     private JdbcTemplate jdbcTemplate;
     private TagDao tagDao;
 
@@ -51,7 +62,7 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     public Optional<GiftCertificate> findById(long id) {
         Optional<GiftCertificate> optional;
         try {
-            GiftCertificate giftCertificate = this.jdbcTemplate.queryForObject(SQL_SELECT_ALL_CERTIFICATES_BY_ID, new GiftCertificateRowMapper(), id);
+            GiftCertificate giftCertificate = jdbcTemplate.queryForObject(SQL_SELECT_ALL_CERTIFICATES_BY_ID, new GiftCertificateRowMapper(), id);
             List<Tag> tags = this.tagDao.findAllTags(id);
             giftCertificate.setTags(tags);
             optional = Optional.of(giftCertificate);
@@ -62,8 +73,39 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
         return optional;
     }
 
-    public List<GiftCertificate> findAll() {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_ALL_CERTIFICATES);
+    @Override
+    public List<GiftCertificate> findAll(String name,
+                                         String description,
+                                         String tagName,
+                                         String sortType,
+                                         String direction) {
+        StringBuilder sb;
+        List<String> parameterList = new ArrayList<>();
+        if (name != null || description != null || tagName != null) {
+            sb = new StringBuilder(SQL_FIND_ALL_JOIN_TABLES);
+            sb.append(WHERE);
+        } else {
+            sb = new StringBuilder(SQL_SELECT_ALL_CERTIFICATES);
+        }
+        if (name != null) {
+            sb.append(NAME_LIKE);
+            parameterList.add(PERCENT + name + PERCENT);
+        }
+        if (description != null) {
+            sb.append(parameterList.isEmpty() ? DESCRIPTION_LIKE : AND + DESCRIPTION_LIKE);
+            parameterList.add(PERCENT + description + PERCENT);
+        }
+        if (tagName != null) {
+            sb.append(parameterList.isEmpty() ? TAG_NAME_EQUALS : AND + TAG_NAME_EQUALS);
+            parameterList.add(tagName);
+        }
+        if (sortType != null) {
+            sb.append(ORDER_BY).append(sortType);
+        }
+        if (direction != null) {
+            sb.append(SPACE).append(direction);
+        }
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sb.toString(), parameterList.toArray());
         return getGiftCertificates(rows);
     }
 
@@ -88,21 +130,21 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     }
 
     public boolean delete(long id) {
-        return this.jdbcTemplate.update(SQL_DELETE, id) > 0;
+        return jdbcTemplate.update(SQL_DELETE, id) > 0;
     }
 
     public List<GiftCertificate> findByTagName(String tagName) {
-        List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(SQL_SELECT_CERTIFICATES_BY_TAG_NAME, tagName);
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_CERTIFICATES_BY_TAG_NAME, tagName);
         return this.getGiftCertificates(rows);
     }
 
     public List<GiftCertificate> findByName(String name) {
-        List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(SQL_SELECT_BY_NAME, PERCENT + name + PERCENT);
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_BY_NAME, PERCENT + name + PERCENT);
         return this.getGiftCertificates(rows);
     }
 
     public List<GiftCertificate> findByDescription(String description) {
-        List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(SQL_SELECT_BY_DESCRIPTION, PERCENT + description + PERCENT);
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_BY_DESCRIPTION, PERCENT + description + PERCENT);
         return this.getGiftCertificates(rows);
     }
 

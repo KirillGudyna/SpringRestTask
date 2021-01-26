@@ -7,6 +7,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -14,12 +17,17 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 class GiftCertificateDaoTest {
     private GiftCertificateDao giftCertificateDao;
     private EmbeddedDatabase embeddedDatabase;
 
-    GiftCertificateDaoTest() {
+    static Stream<Arguments> findAllArgs() {
+        return Stream.of(
+                Arguments.of("Tattoo", null, null, null, null, 2),
+                Arguments.of("Theater", null, null, null, null, 1)
+        );
     }
 
     @BeforeEach
@@ -27,10 +35,10 @@ class GiftCertificateDaoTest {
         embeddedDatabase = (new EmbeddedDatabaseBuilder()).addDefaultScripts().setType(EmbeddedDatabaseType.H2).build();
         JdbcTemplate jdbcTemplate = new JdbcTemplate(embeddedDatabase);
         giftCertificateDao = new GiftCertificateDaoImpl();
-        ((GiftCertificateDaoImpl)giftCertificateDao).setJdbcTemplate(jdbcTemplate);
+        ((GiftCertificateDaoImpl) giftCertificateDao).setJdbcTemplate(jdbcTemplate);
         TagDaoImpl tagDao = new TagDaoImpl();
         tagDao.setJdbcTemplate(jdbcTemplate);
-        ((GiftCertificateDaoImpl)giftCertificateDao).setGiftCertificateTagDao(tagDao);
+        ((GiftCertificateDaoImpl) giftCertificateDao).setGiftCertificateTagDao(tagDao);
     }
 
     @AfterEach
@@ -41,7 +49,7 @@ class GiftCertificateDaoTest {
     @Test
     void findByIdExist() {
         Optional<GiftCertificate> optional = giftCertificateDao.findById(1L);
-        Assertions.assertTrue(optional.isPresent() && (optional.get()).getName().equals("Сауна Тритон"));
+        Assertions.assertTrue(optional.isPresent() && (optional.get()).getName().equals("Sauna Triton"));
     }
 
     @Test
@@ -50,16 +58,17 @@ class GiftCertificateDaoTest {
         Assertions.assertFalse(optional.isPresent());
     }
 
-    @Test
-    void findAll() {
-        List<GiftCertificate> allCertificates = giftCertificateDao.findAll();
-        Assertions.assertEquals(10, allCertificates.size());
+    @ParameterizedTest
+    @MethodSource("findAllArgs")
+    void testFindAll(String name, String description, String tagName, String sortType, String direction, int size) {
+        List<GiftCertificate> actual = giftCertificateDao.findAll(name, description, tagName, sortType, direction);
+        Assertions.assertEquals(size, actual.size());
     }
 
     @Test
     void add() {
         giftCertificateDao.add(StaticDataProvider.GIFT_CERTIFICATE);
-        List<GiftCertificate> allCertificates = giftCertificateDao.findAll();
+        List<GiftCertificate> allCertificates = giftCertificateDao.findAll(null, null, null, null, null);
         Assertions.assertEquals(11, allCertificates.size());
     }
 
@@ -80,19 +89,19 @@ class GiftCertificateDaoTest {
 
     @Test
     void findByTagNameExist() {
-        List<GiftCertificate> certificates = giftCertificateDao.findByTagName("РђРєС‚РёРІРЅРѕСЃС‚СЊ");
+        List<GiftCertificate> certificates = giftCertificateDao.findByTagName("Activity");
         Assertions.assertEquals(2, certificates.size());
     }
 
     @Test
     void findByName() {
-        List<GiftCertificate> certificates = giftCertificateDao.findByName("РўР°С‚Сѓ");
+        List<GiftCertificate> certificates = giftCertificateDao.findByName("Tattoo");
         Assertions.assertEquals(2, certificates.size());
     }
 
     @Test
     void findByDescription() {
-        List<GiftCertificate> certificates = giftCertificateDao.findByDescription("Р‘РµСЃРїР»Р°С‚РЅР°СЏ");
-        Assertions.assertEquals(2, certificates.size());
+        List<GiftCertificate> certificates = giftCertificateDao.findByDescription("Free");
+        Assertions.assertEquals(4, certificates.size());
     }
 }

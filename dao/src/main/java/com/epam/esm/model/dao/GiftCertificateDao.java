@@ -5,9 +5,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GiftCertificateDao {
-    List<GiftCertificate> findAll();
 
     Optional<GiftCertificate> findById(long var1);
+
+    List<GiftCertificate> findAll(String name,
+                                  String description,
+                                  String tagName,
+                                  String sortType,
+                                  String direction);
 
     GiftCertificate add(GiftCertificate var1);
 
