@@ -1,187 +1,141 @@
 package com.epam.esm.model.dao.impl;
 
 import com.epam.esm.model.dao.GiftCertificateDao;
-import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.GiftCertificate;
-import com.epam.esm.model.entity.Tag;
-import com.epam.esm.model.util.ColumnName;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import com.epam.esm.model.util.SqlJpqlUtil;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class GiftCertificateDaoImpl implements GiftCertificateDao {
-    private static final String SQL_SELECT_ALL_CERTIFICATES = "SELECT id, name, description, price, duration, create_date, last_update_date FROM gift_certificate";
-    private static final String SQL_SELECT_ALL_CERTIFICATES_BY_ID = "SELECT id, name, description, price, duration, create_date, last_update_date FROM gift_certificate\nWHERE id = ?";
-    private static final String SQL_INSERT = "INSERT INTO gift_certificate (name, description, price, duration, create_date, last_update_date) VALUES (?, ?, ?, ?, ?, ?)";
-    private static final String SQL_UPDATE = "UPDATE gift_certificate SET NAME = ?, description = ?, price = ?, duration = ?, last_update_date = ? \nWHERE id = ?";
-    private static final String SQL_DELETE = "DELETE FROM gift_certificate WHERE id = ?";
-    private static final String SQL_SELECT_CERTIFICATES_BY_TAG_NAME = "SELECT gift_certificate.id, gift_certificate.name, description, price, duration, create_date, last_update_date\nFROM gift_certificate JOIN gift_to_tag ON gift_certificate.id=gift_certificate_id JOIN tag ON tag.id=tag_id\nWHERE tag.name=?";
-    private static final String SQL_SELECT_BY_NAME = "SELECT id, name, description, price, duration, create_date, last_update_date\nFROM gift_certificate WHERE name LIKE ?";
-    private static final String SQL_SELECT_BY_DESCRIPTION = "SELECT id, name, description, price, duration, create_date, last_update_date\nFROM gift_certificate WHERE description LIKE ?";
-    private static final String SQL_FIND_ALL_JOIN_TABLES =
-            "SELECT DISTINCT g.id, g.name, g.description, g.price, g.duration, g.create_date, g.last_update_date\n" +
-                    "FROM gift_certificate AS g JOIN gift_to_tag as ct ON g.id=ct.gift_certificate_id " +
-                    "JOIN tag AS t ON ct.tag_id=t.id \n";
+    private static final String JPQL_DELETE_ORDERS_BY_CERTIFICATE_ID =
+            "delete from Order o where o.giftCertificate.id = ?1 ";
+    private static final String JPQL_FIND_ALL = "select g from GiftCertificate g join g.tags t ";
 
+    private static final String GROUP_BY_HAVING = "group by g.id having count(g.id) >= ?1";
+    private static final String GIFT_CERTIFICATE_NAME = "name";
+    private static final String GIFT_CERTIFICATE_DESCRIPTION = "description";
     private static final String PERCENT = "%";
-    private static final String WHERE = "WHERE ";
-    private static final String NAME_LIKE = "g.name LIKE ? ";
-    private static final String DESCRIPTION_LIKE = "description LIKE ? ";
-    private static final String TAG_NAME_EQUALS = "t.name = ? ";
-    private static final String AND = "AND ";
-    private static final String ORDER_BY = "ORDER BY ";
+    private static final String WHERE = "where ";
+    private static final String NAME_LIKE = "g.name like :name ";
+    private static final String DESCRIPTION_LIKE = "g.description like :description ";
+    private static final String TAG_NAME_EQUALS = "t.name = :tagName";
+    private static final String AND = "and ";
+    private static final String ORDER_BY = "order by ";
     private static final String SPACE = " ";
+    private static final String LEFT_BRACKET = "(";
+    private static final String RIGHT_BRACKET = ")";
+    private static final String TAG_NAME = "tagName";
+    private static final String ZERO = "0";
+    private static final String OR = "or";
 
-    private JdbcTemplate jdbcTemplate;
-    private TagDao tagDao;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    @Autowired
-    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    @Autowired
-    public void setGiftCertificateTagDao(TagDaoImpl tagDao) {
-        this.tagDao = tagDao;
-    }
-
+    @Override
     public Optional<GiftCertificate> findById(long id) {
-        Optional<GiftCertificate> optional;
-        try {
-            GiftCertificate giftCertificate = jdbcTemplate.queryForObject(SQL_SELECT_ALL_CERTIFICATES_BY_ID, new GiftCertificateRowMapper(), id);
-            List<Tag> tags = this.tagDao.findAllTags(id);
-            giftCertificate.setTags(tags);
-            optional = Optional.of(giftCertificate);
-        } catch (EmptyResultDataAccessException var6) {
-            optional = Optional.empty();
-        }
-
-        return optional;
+        return Optional.ofNullable(entityManager.find(getEntityClass(), id));
     }
 
     @Override
-    public List<GiftCertificate> findAll(String name,
-                                         String description,
-                                         String tagName,
-                                         String sortType,
-                                         String direction) {
-        StringBuilder sb;
-        List<String> parameterList = new ArrayList<>();
-        if (name != null || description != null || tagName != null) {
-            sb = new StringBuilder(SQL_FIND_ALL_JOIN_TABLES);
-            sb.append(WHERE);
-        } else {
-            sb = new StringBuilder(SQL_SELECT_ALL_CERTIFICATES);
+    public List<GiftCertificate> findAll(String name, String description, String[] tagNames,
+                                         String sortType, String direction, Integer limit, Integer offset) {
+        StringBuilder jpql = new StringBuilder(JPQL_FIND_ALL);
+        Map<String, String> parameterMap = new HashMap<>();
+        appendName(name, jpql, parameterMap);
+        appendDescription(description, jpql, parameterMap);
+        appendTagNames(tagNames, jpql, parameterMap);
+        appendOrderBy(sortType, direction, jpql);
+        TypedQuery<GiftCertificate> query = entityManager.createQuery(jpql.toString(), GiftCertificate.class);
+        for (Map.Entry<String, String> entry : parameterMap.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
         }
-        if (name != null) {
-            sb.append(NAME_LIKE);
-            parameterList.add(PERCENT + name + PERCENT);
+        query.setParameter(1, tagNames != null ? (long) tagNames.length : 1L);
+        if (limit != null) {
+            query.setMaxResults(limit);
         }
-        if (description != null) {
-            sb.append(parameterList.isEmpty() ? DESCRIPTION_LIKE : AND + DESCRIPTION_LIKE);
-            parameterList.add(PERCENT + description + PERCENT);
+        if (offset != null) {
+            query.setFirstResult(offset);
         }
-        if (tagName != null) {
-            sb.append(parameterList.isEmpty() ? TAG_NAME_EQUALS : AND + TAG_NAME_EQUALS);
-            parameterList.add(tagName);
-        }
+        return query.getResultList();
+    }
+
+    @Override
+    public GiftCertificate add(GiftCertificate certificate) {
+        entityManager.persist(certificate);
+        return certificate;
+    }
+
+    @Override
+    public GiftCertificate update(GiftCertificate certificate) {
+        return entityManager.merge(certificate);
+    }
+
+    private void appendOrderBy(String sortType, String direction, StringBuilder jpql) {
         if (sortType != null) {
-            sb.append(ORDER_BY).append(sortType);
+            jpql.append(ORDER_BY).append(SPACE).append(SqlJpqlUtil.SQL_MAP.get(sortType)).append(SPACE);
+            if (direction != null) {
+                jpql.append(direction).append(SPACE);
+            }
         }
-        if (direction != null) {
-            sb.append(SPACE).append(direction);
+    }
+
+    private void appendTagNames(String[] tagNames, StringBuilder jpql, Map<String, String> parameterMap) {
+        if (tagNames != null) {
+            jpql.append(parameterMap.isEmpty() ? WHERE : AND);
+            jpql.append(LEFT_BRACKET);
+            jpql.append(TAG_NAME_EQUALS.concat(ZERO));
+            parameterMap.put(TAG_NAME + ZERO, tagNames[0]);
+            for (int i = 1; i < tagNames.length; i++) {
+                jpql.append(SPACE).append(OR).append(SPACE);
+                String number = String.valueOf(i);
+                jpql.append(TAG_NAME_EQUALS.concat(number));
+                parameterMap.put(TAG_NAME + number, tagNames[i]);
+            }
+            jpql.append(RIGHT_BRACKET).append(SPACE);
         }
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sb.toString(), parameterList.toArray());
-        return getGiftCertificates(rows);
+        jpql.append(GROUP_BY_HAVING);
     }
 
-    public GiftCertificate add(GiftCertificate entity) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, entity.getName());
-            ps.setString(2, entity.getDescription());
-            ps.setInt(3, entity.getPrice() != null ? entity.getPrice() : 0);
-            ps.setInt(4, entity.getDuration() != null ? entity.getDuration() : 0);
-            ps.setString(5, entity.getCreateDate());
-            ps.setString(6, entity.getLastUpdateDate());
-            return ps;
-        }, keyHolder);
-        return findById(keyHolder.getKey().longValue()).get();
+    private void appendDescription(String description, StringBuilder jpql, Map<String, String> parameterMap) {
+        if (description != null) {
+            jpql.append(parameterMap.isEmpty() ? WHERE + DESCRIPTION_LIKE : AND + DESCRIPTION_LIKE);
+            parameterMap.put(GIFT_CERTIFICATE_DESCRIPTION, PERCENT + description + PERCENT);
+        }
     }
 
-    public GiftCertificate update(GiftCertificate entity) {
-        jdbcTemplate.update(SQL_UPDATE, entity.getName(), entity.getDescription(), entity.getPrice(), entity.getDuration(), entity.getLastUpdateDate(), entity.getId());
-        return findById(entity.getId()).get();
+    private void appendName(String name, StringBuilder jpql, Map<String, String> parameterMap) {
+        if (name != null) {
+            jpql.append(WHERE).append(NAME_LIKE);
+            parameterMap.put(GIFT_CERTIFICATE_NAME, PERCENT + name + PERCENT);
+        }
     }
 
+    @Override
+    @Transactional
     public boolean delete(long id) {
-        return jdbcTemplate.update(SQL_DELETE, id) > 0;
-    }
-
-    public List<GiftCertificate> findByTagName(String tagName) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_CERTIFICATES_BY_TAG_NAME, tagName);
-        return this.getGiftCertificates(rows);
-    }
-
-    public List<GiftCertificate> findByName(String name) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_BY_NAME, PERCENT + name + PERCENT);
-        return this.getGiftCertificates(rows);
-    }
-
-    public List<GiftCertificate> findByDescription(String description) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_SELECT_BY_DESCRIPTION, PERCENT + description + PERCENT);
-        return this.getGiftCertificates(rows);
-    }
-
-    private List<GiftCertificate> getGiftCertificates(List<Map<String, Object>> rows) {
-        List<GiftCertificate> certificates = new ArrayList<>();
-
-        for (Map<String, Object> row : rows) {
-            GiftCertificate giftCertificate = new GiftCertificate();
-            giftCertificate.setId((Long) row.get("id"));
-            giftCertificate.setName((String) row.get("name"));
-            giftCertificate.setDescription((String) row.get("description"));
-            giftCertificate.setPrice((Integer) row.get("price"));
-            giftCertificate.setDuration((Integer) row.get("duration"));
-            giftCertificate.setCreateDate((String) row.get("create_date"));
-            giftCertificate.setLastUpdateDate((String) row.get("last_update_date"));
-            List<Tag> tags = this.tagDao.findAllTags(giftCertificate.getId());
-            giftCertificate.setTags(tags);
-            certificates.add(giftCertificate);
+        GiftCertificate giftCertificate = entityManager.find(GiftCertificate.class, id);
+        if (giftCertificate != null) {
+            entityManager.createQuery(JPQL_DELETE_ORDERS_BY_CERTIFICATE_ID)
+                    .setParameter(1, id)
+                    .executeUpdate();
+            entityManager.remove(giftCertificate);
+            return true;
+        } else {
+            return false;
         }
-
-        return certificates;
     }
 
-    private static class GiftCertificateRowMapper implements RowMapper<GiftCertificate> {
-        private GiftCertificateRowMapper() {
-        }
-
-        public GiftCertificate mapRow(ResultSet resultSet, int i) throws SQLException {
-            GiftCertificate certificate = new GiftCertificate();
-            certificate.setId(resultSet.getLong(ColumnName.GIFT_CERTIFICATE_ID));
-            certificate.setName(resultSet.getString(ColumnName.GIFT_CERTIFICATE_NAME));
-            certificate.setDescription(resultSet.getString(ColumnName.GIFT_CERTIFICATE_DESCRIPTION));
-            certificate.setPrice(resultSet.getInt(ColumnName.GIFT_CERTIFICATE_PRICE));
-            certificate.setDuration(resultSet.getInt(ColumnName.GIFT_CERTIFICATE_DURATION));
-            certificate.setCreateDate(resultSet.getString(ColumnName.GIFT_CERTIFICATE_CREATE_DATE));
-            certificate.setLastUpdateDate(resultSet.getString(ColumnName.GIFT_CERTIFICATE_LAST_UPDATE_DATE));
-            return certificate;
-        }
+    @Override
+    public Class<GiftCertificate> getEntityClass() {
+        return GiftCertificate.class;
     }
 }

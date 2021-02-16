@@ -49,7 +49,7 @@ public class CertificateTagComparator {
             return c1.getLastUpdateDate().compareTo(c2.getLastUpdateDate());
         }),
         PRICE((c1, c2) -> {
-            return c1.getPrice() - c2.getPrice();
+            return c1.getPrice().compareTo(c2.getPrice());
         }),
         DURATION((c1, c2) -> {
             return c1.getDuration() - c2.getDuration();

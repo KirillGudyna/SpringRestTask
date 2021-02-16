@@ -1,8 +1,8 @@
 package com.epam.esm.controller.errorhandler;
 
-import com.epam.esm.controller.exception.AbstractRuntimeException;
-import com.epam.esm.controller.exception.GiftEntityNotFoundException;
-import com.epam.esm.controller.exception.WrongParameterFormatException;
+import com.epam.esm.exception.AbstractRuntimeException;
+import com.epam.esm.exception.GiftEntityNotFoundException;
+import com.epam.esm.exception.WrongParameterFormatException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

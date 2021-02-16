@@ -6,23 +6,16 @@ import java.util.Optional;
 
 public interface GiftCertificateDao {
 
-    Optional<GiftCertificate> findById(long var1);
+    Optional<GiftCertificate> findById(long id);
 
-    List<GiftCertificate> findAll(String name,
-                                  String description,
-                                  String tagName,
-                                  String sortType,
-                                  String direction);
+    List<GiftCertificate> findAll(String name, String description, String[] tagNames,
+                                  String sortType, String direction, Integer limit, Integer offset);
 
-    GiftCertificate add(GiftCertificate var1);
+    GiftCertificate add(GiftCertificate certificate);
 
-    GiftCertificate update(GiftCertificate var1);
+    GiftCertificate update(GiftCertificate certificate);
 
-    boolean delete(long var1);
+    boolean delete(long id);
 
-    List<GiftCertificate> findByTagName(String var1);
-
-    List<GiftCertificate> findByName(String var1);
-
-    List<GiftCertificate> findByDescription(String var1);
+    Class<GiftCertificate> getEntityClass();
 }

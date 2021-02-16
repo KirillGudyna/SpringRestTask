@@ -1,137 +1,248 @@
 package com.epam.esm.model.entity;
 
+import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class GiftCertificate {
+/**
+ * Entity class, representing gift certificate .
+ */
+@javax.persistence.Entity
+@Table(name = "gift_certificate")
+public class GiftCertificate  {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
+
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "description")
     private String description;
-    private Integer price;
+
+    @Column(name = "price")
+    private BigDecimal price;
+
+    /**
+     * Duration in days, while gift certificate is valid
+     */
+    @Column(name = "duration")
     private Integer duration;
+
+    @Column(name = "create_date")
     private String createDate;
+
+    @Column(name = "last_update_date")
     private String lastUpdateDate;
+
+    @ManyToMany(cascade = {CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "gift_to_tag",
+            joinColumns = @JoinColumn(name = "gift_certificate_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id", referencedColumnName = "id")
+    )
     private List<Tag> tags;
 
+    /**
+     * Instantiates a new Gift certificate.
+     */
     public GiftCertificate() {
     }
 
-    public GiftCertificate(GiftCertificate certificate) {
-        this.id = certificate.id;
-        this.name = certificate.name;
-        this.description = certificate.description;
-        this.price = certificate.price;
-        this.duration = certificate.duration;
-        this.createDate = certificate.createDate;
-        this.lastUpdateDate = certificate.lastUpdateDate;
-        if (certificate.getTags() != null) {
-            this.tags = new ArrayList<>();
-            certificate.getTags().forEach(t -> this.tags.add(new Tag(t.getId(), t.getName())));
-        }
-
+    /**
+     * Instantiates a new Gift certificate.
+     *
+     * @param id             the id
+     * @param name           the name
+     * @param description    the description
+     * @param price          the price
+     * @param duration       the duration
+     * @param createDate     the create date
+     * @param lastUpdateDate the last update date
+     * @param tags           the tags
+     */
+    public GiftCertificate(Long id,
+                           String name,
+                           String description,
+                           BigDecimal price,
+                           Integer duration,
+                           String createDate,
+                           String lastUpdateDate,
+                           List<Tag> tags) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.duration = duration;
+        this.createDate = createDate;
+        this.lastUpdateDate = lastUpdateDate;
+        this.tags = tags;
     }
 
     public Long getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     public String getName() {
-        return this.name;
+        return name;
     }
 
+    /**
+     * Sets name.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Gets description.
+     *
+     * @return the description
+     */
     public String getDescription() {
-        return this.description;
+        return description;
     }
 
+    /**
+     * Sets description.
+     *
+     * @param description the description
+     */
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public Integer getPrice() {
-        return this.price;
+    /**
+     * Gets price.
+     *
+     * @return the price
+     */
+    public BigDecimal getPrice() {
+        return price;
     }
 
-    public void setPrice(Integer price) {
+    /**
+     * Sets price.
+     *
+     * @param price the price
+     */
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
+    /**
+     * Gets duration.
+     *
+     * @return the duration
+     */
     public Integer getDuration() {
-        return this.duration;
+        return duration;
     }
 
+    /**
+     * Sets duration.
+     *
+     * @param duration the duration
+     */
     public void setDuration(Integer duration) {
         this.duration = duration;
     }
 
+    /**
+     * Gets create date.
+     *
+     * @return the create date
+     */
     public String getCreateDate() {
-        return this.createDate;
+        return createDate;
     }
 
+    /**
+     * Sets create date.
+     *
+     * @param createDate the create date
+     */
     public void setCreateDate(String createDate) {
         this.createDate = createDate;
     }
 
+    /**
+     * Gets last update date.
+     *
+     * @return the last update date
+     */
     public String getLastUpdateDate() {
-        return this.lastUpdateDate;
+        return lastUpdateDate;
     }
 
+    /**
+     * Sets last update date.
+     *
+     * @param lastUpdateDate the last update date
+     */
     public void setLastUpdateDate(String lastUpdateDate) {
         this.lastUpdateDate = lastUpdateDate;
     }
 
+    /**
+     * Gets tags.
+     *
+     * @return the tags
+     */
     public List<Tag> getTags() {
-        return this.tags != null ? new ArrayList<>(this.tags) : null;
+        return tags;
     }
 
     public void setTags(List<Tag> tags) {
         this.tags = tags;
     }
 
-    public void clearAllTags() {
-        this.tags = new ArrayList<>();
-    }
-
-    public void addTag(Tag tag) {
-        this.tags.add(tag);
-    }
-
+    @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        } else if (o != null && this.getClass() == o.getClass()) {
-            GiftCertificate that = (GiftCertificate) o;
-            if (!Objects.equals(this.id, that.id)) {
-                return false;
-            } else if (!Objects.equals(this.name, that.name)) {
-                return false;
-            } else if (!Objects.equals(this.description, that.description)) {
-                return false;
-            } else if (!Objects.equals(this.price, that.price)) {
-                return false;
-            } else {
-                return Objects.equals(this.duration, that.duration) && Objects.equals(this.tags, that.tags);
-            }
-        } else {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GiftCertificate that = (GiftCertificate) o;
+        if (!Objects.equals(id, that.id)) {
             return false;
         }
+        if (!Objects.equals(name, that.name)) {
+            return false;
+        }
+        if (!Objects.equals(description, that.description)) {
+            return false;
+        }
+        if (price != null ? price.compareTo(that.price) != 0 : that.price != null) {
+            return false;
+        }
+        if (!Objects.equals(duration, that.duration)) {
+            return false;
+        }
+        return tags != null ? new ArrayList<>(tags).equals(new ArrayList<>(that.tags)) : that.tags != null;
     }
 
+    @Override
     public int hashCode() {
-        int result = this.id != null ? this.id.hashCode() : 0;
-        result = 31 * result + (this.name != null ? this.name.hashCode() : 0);
-        result = 31 * result + (this.description != null ? this.description.hashCode() : 0);
-        result = 31 * result + (this.price != null ? this.price.hashCode() : 0);
-        result = 31 * result + (this.duration != null ? this.duration.hashCode() : 0);
-        result = 31 * result + (this.tags != null ? this.tags.hashCode() : 0);
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (price != null ? price.hashCode() : 0);
+        result = 31 * result + (duration != null ? duration.hashCode() : 0);
+        result = 31 * result + (tags != null ? tags.hashCode() : 0);
         return result;
     }
 }

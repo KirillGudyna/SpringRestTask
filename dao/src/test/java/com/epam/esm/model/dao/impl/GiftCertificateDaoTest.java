@@ -3,105 +3,114 @@ package com.epam.esm.model.dao.impl;
 import com.epam.esm.dataprovider.StaticDataProvider;
 import com.epam.esm.model.dao.GiftCertificateDao;
 import com.epam.esm.model.entity.GiftCertificate;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-class GiftCertificateDaoTest {
-    private GiftCertificateDao giftCertificateDao;
-    private EmbeddedDatabase embeddedDatabase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-    static Stream<Arguments> findAllArgs() {
+@DataJpaTest
+@ContextConfiguration(classes = GiftCertificateDaoImpl.class)
+class GiftCertificateDaoTest {
+    @Autowired
+    private GiftCertificateDao giftCertificateDao;
+
+    static Stream<Arguments> argsFindById() {
         return Stream.of(
-                Arguments.of("Tattoo", null, null, null, null, 2),
-                Arguments.of("Theater", null, null, null, null, 1)
+                Arguments.of(1L, true),
+                Arguments.of(999L, false)
         );
     }
 
-    @BeforeEach
-    void setUp() {
-        embeddedDatabase = (new EmbeddedDatabaseBuilder()).addDefaultScripts().setType(EmbeddedDatabaseType.H2).build();
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(embeddedDatabase);
-        giftCertificateDao = new GiftCertificateDaoImpl();
-        ((GiftCertificateDaoImpl) giftCertificateDao).setJdbcTemplate(jdbcTemplate);
-        TagDaoImpl tagDao = new TagDaoImpl();
-        tagDao.setJdbcTemplate(jdbcTemplate);
-        ((GiftCertificateDaoImpl) giftCertificateDao).setGiftCertificateTagDao(tagDao);
+    static Stream<Arguments> argsFindAll() {
+        return Stream.of(
+                Arguments.of(null, null, null, null, null, 13),
+                Arguments.of(null, null, null, 10, null, 10),
+                Arguments.of(null, null, null, 10, 10, 3),
+                Arguments.of(null, null, null, 10, 20, 0),
+                Arguments.of("Тату", null, null, null, null, 2),
+                Arguments.of(null, "people", null, null, null, 2),
+                Arguments.of(null, null, new String[]{"Активность", "Отдых"}, null, null, 2)
+        );
     }
 
-    @AfterEach
-    void tearDown() {
-        embeddedDatabase.shutdown();
-    }
-
-    @Test
-    void findByIdExist() {
-        Optional<GiftCertificate> optional = giftCertificateDao.findById(1L);
-        Assertions.assertTrue(optional.isPresent() && (optional.get()).getName().equals("Sauna Triton"));
-    }
-
-    @Test
-    void findByIdNotExist() {
-        Optional<GiftCertificate> optional = giftCertificateDao.findById(199L);
-        Assertions.assertFalse(optional.isPresent());
+    static Stream<Arguments> argsFindAllSort() {
+        return Stream.of(
+                Arguments.of("price", "asc", Comparator.comparing(GiftCertificate::getPrice)),
+                Arguments.of("price", "desc", Comparator.comparing(GiftCertificate::getPrice).reversed()),
+                Arguments.of("duration", "asc", Comparator.comparing(GiftCertificate::getDuration)),
+                Arguments.of("duration", "desc", Comparator.comparing(GiftCertificate::getDuration).reversed()),
+                Arguments.of("create_date", "asc", Comparator.comparing(GiftCertificate::getCreateDate)),
+                Arguments.of("create_date", "desc", Comparator.comparing(GiftCertificate::getCreateDate).reversed()),
+                Arguments.of("last_update_date", "asc", Comparator.comparing(GiftCertificate::getLastUpdateDate)),
+                Arguments.of("last_update_date", "desc", Comparator.comparing(GiftCertificate::getLastUpdateDate).reversed())
+        );
     }
 
     @ParameterizedTest
-    @MethodSource("findAllArgs")
-    void testFindAll(String name, String description, String tagName, String sortType, String direction, int size) {
-        List<GiftCertificate> actual = giftCertificateDao.findAll(name, description, tagName, sortType, direction);
-        Assertions.assertEquals(size, actual.size());
+    @MethodSource("argsFindById")
+    void findById(Long id, boolean result) {
+        Optional<GiftCertificate> optional = giftCertificateDao.findById(id);
+        assertEquals(result, optional.isPresent());
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsFindAll")
+    void findAll(
+            String name,
+            String description,
+            String[] tagNames,
+            Integer limit,
+            Integer offset,
+            int actualSize
+    ) {
+        List<GiftCertificate> allTags = giftCertificateDao.findAll(name, description, tagNames,
+                null, null, limit, offset);
+        assertEquals(actualSize, allTags.size());
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsFindAllSort")
+    void findAllSort(String sortType, String direction, Comparator<GiftCertificate> comparator) {
+        List<GiftCertificate> allTags = giftCertificateDao.findAll(null, null, null,
+                sortType, direction, null, null);
+        List<GiftCertificate> sorted = new ArrayList<>(allTags);
+        sorted.sort(comparator);
+        assertEquals(allTags, sorted);
+    }
+
+    @ParameterizedTest
+    @MethodSource("argsFindById")
+    @DirtiesContext
+    void delete(Long id, boolean result) {
+        assertEquals(result, giftCertificateDao.delete(id));
     }
 
     @Test
+    @DirtiesContext
     void add() {
-        giftCertificateDao.add(StaticDataProvider.GIFT_CERTIFICATE);
-        List<GiftCertificate> allCertificates = giftCertificateDao.findAll(null, null, null, null, null);
-        Assertions.assertEquals(11, allCertificates.size());
+        GiftCertificate created = giftCertificateDao.add(StaticDataProvider.ADDING_CERTIFICATE);
+        Optional<GiftCertificate> optional = giftCertificateDao.findById(created.getId());
+        assertTrue(optional.isPresent() && optional.get().equals(created));
     }
 
     @Test
+    @DirtiesContext
     void update() {
-        GiftCertificate giftCertificate = giftCertificateDao.findById(1L).get();
-        giftCertificate.setPrice(155);
-        GiftCertificate updated = giftCertificateDao.update(giftCertificate);
-        Assertions.assertEquals(155, updated.getPrice());
-    }
-
-    @Test
-    void delete() {
-        giftCertificateDao.delete(1L);
+        GiftCertificate updated = giftCertificateDao.update(StaticDataProvider.UPDATING_GIFT_CERTIFICATE);
         Optional<GiftCertificate> optional = giftCertificateDao.findById(1L);
-        Assertions.assertFalse(optional.isPresent());
-    }
-
-    @Test
-    void findByTagNameExist() {
-        List<GiftCertificate> certificates = giftCertificateDao.findByTagName("Activity");
-        Assertions.assertEquals(2, certificates.size());
-    }
-
-    @Test
-    void findByName() {
-        List<GiftCertificate> certificates = giftCertificateDao.findByName("Tattoo");
-        Assertions.assertEquals(2, certificates.size());
-    }
-
-    @Test
-    void findByDescription() {
-        List<GiftCertificate> certificates = giftCertificateDao.findByDescription("Free");
-        Assertions.assertEquals(4, certificates.size());
+        assertTrue(optional.isPresent() && optional.get().equals(updated));
     }
 }

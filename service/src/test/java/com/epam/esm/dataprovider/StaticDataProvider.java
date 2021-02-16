@@ -6,7 +6,7 @@ import com.epam.esm.model.entity.Tag;
 import java.util.Collections;
 import java.util.List;
 
-public class StaticDataProvider {
+public class StaticDataProvider {/*
     public static final String ISO_DATE = "2020-12-16T14:48Z";
     public static final Tag TAG;
     public static final Tag ADDING_TAG;
@@ -37,5 +37,5 @@ public class StaticDataProvider {
         UPDATED_GIFT_CERTIFICATE.setPrice(60);
         GIFT_CERTIFICATE_LIST = Collections.singletonList(GIFT_CERTIFICATE);
         TAG_LIST = Collections.singletonList(TAG);
-    }
+    }*/
 }

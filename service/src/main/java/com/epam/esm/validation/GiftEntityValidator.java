@@ -1,9 +1,12 @@
 package com.epam.esm.validation;
 
+import java.util.Arrays;
+
 public class GiftEntityValidator {
 
     private static final String NAME_REGEX = "^.{1,50}$";
     private static final String CERTIFICATE_DESCRIPTION_REGEX = "^.{1,250}$";
+    private static final String ID_REGEX = "^[1-9]\\d{0,18}$";
     private static final String PRICE = "price";
     private static final String NAME = "name";
     private static final String CREATE_DATE = "create-date";
@@ -39,5 +42,9 @@ public class GiftEntityValidator {
 
     private static boolean correctDirection(String direction) {
         return direction == null || direction.equals(ASC) || direction.equals(DESC);
+    }
+
+    public static boolean correctId(long... ids) {
+        return Arrays.stream(ids).allMatch(id -> String.valueOf(id).matches(ID_REGEX));
     }
 }
