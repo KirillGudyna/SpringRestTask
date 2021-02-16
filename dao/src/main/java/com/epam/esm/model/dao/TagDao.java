@@ -1,19 +1,20 @@
 package com.epam.esm.model.dao;
 
 import com.epam.esm.model.entity.Tag;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface TagDao {
-    Optional<Tag> findById(long var1);
+    Optional<Tag> findById(long id);
 
-    List<Tag> findAll();
+    List<Tag> findAll(Integer limit, Integer offset);
 
-    Tag add(Tag var1);
+    Tag add(Tag tag);
 
-    boolean delete(long var1);
+    boolean delete(long id);
 
-    Optional<Tag> findByName(String var1);
+    Optional<Tag> findByName(String name);
 
-    List<Tag> findAllTags(long var1);
+    Class<Tag> getEntityClass();
 }

@@ -1,27 +1,25 @@
 package com.epam.esm.service;
 
-import com.epam.esm.model.entity.GiftCertificate;
+import com.epam.esm.dto.GiftCertificateDto;
 import java.util.List;
 import java.util.Optional;
 
 public interface GiftCertificateService {
-    Optional<GiftCertificate> findById(long var1);
 
-    List<GiftCertificate> findAll(String name,
+    Optional<GiftCertificateDto> findById(long id);
+
+    List<GiftCertificateDto> findAll(String name,
                                   String description,
-                                  String tagName,
+                                  String tagNames,
                                   String sortType,
-                                  String direction);
+                                  String direction,
+                                  Integer limit,
+                                  Integer offset);
 
-    GiftCertificate add(GiftCertificate var1);
+    GiftCertificateDto add(GiftCertificateDto certificateDto);
 
-    Optional<GiftCertificate> update(GiftCertificate var1);
+    Optional<GiftCertificateDto> update(GiftCertificateDto certificate);
 
-    boolean delete(long var1);
+    boolean delete(long id);
 
-    List<GiftCertificate> findByTagName(String var1, String var2, String var3);
-
-    List<GiftCertificate> findByName(String var1, String var2, String var3);
-
-    List<GiftCertificate> findByDescription(String var1, String var2, String var3);
 }
