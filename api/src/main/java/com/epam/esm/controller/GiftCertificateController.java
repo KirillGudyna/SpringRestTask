@@ -10,8 +10,6 @@ import com.epam.esm.validation.GiftEntityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import java.net.http.HttpRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +20,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  * Gift certificate controller
  */
 @RestController
-@RequestMapping("/certificates")
+@RequestMapping(value = "/certificates")
 public class GiftCertificateController {
     private GiftCertificateService service;
     private ExceptionProvider exceptionProvider;
@@ -36,32 +34,6 @@ public class GiftCertificateController {
     public void setExceptionProvider(ExceptionProvider exceptionProvider) {
         this.exceptionProvider = exceptionProvider;
     }
-    /**
-     * Method adds HATEOAS link to GiftCertificateDTO entity
-     *
-     * @param certificate the certificate
-     * @return the gift certificate dto
-     */
-    static GiftCertificateDto addSelfLink(GiftCertificateDto certificate) {
-        if (certificate.getTags() != null) {
-            certificate.setTags(
-                    certificate.getTags().stream().map(TagController::addLinks).collect(Collectors.toList())
-            );
-        }
-        return certificate
-                .add(linkTo(methodOn(GiftCertificateController.class).findById(certificate.getId())).withSelfRel())
-                .add(linkTo(GiftCertificateController.class)
-                        .withRel(HateoasData.POST)
-                        .withName(HateoasData.ADD_CERTIFICATE))
-                .add(linkTo(methodOn(GiftCertificateController.class)
-                        .findById(certificate.getId()))
-                        .withRel(HateoasData.PATCH)
-                        .withName(HateoasData.UPDATE_CERTIFICATE_FIELDS))
-                .add(linkTo(methodOn(GiftCertificateController.class)
-                        .findById(certificate.getId()))
-                        .withRel(HateoasData.DELETE)
-                        .withName(HateoasData.DELETE_CERTIFICATE));
-    }
 
     /**
      * End point for findAllGiftCertificates request.
@@ -69,12 +41,12 @@ public class GiftCertificateController {
      */
     @GetMapping
     public List<GiftCertificateDto> findAll(@RequestParam(value = "name", required = false) String name,
-                                         @RequestParam(value = "description", required = false) String description,
-                                         @RequestParam(value = "tag", required = false) String tagName,
-                                         @RequestParam(value = "sort", required = false) String sortType,
-                                         @RequestParam(value = "direction", required = false) String direction,
-                                         @RequestParam(required = false) Integer limit,
-                                         @RequestParam(required = false) Integer offset) {
+                                            @RequestParam(value = "description", required = false) String description,
+                                            @RequestParam(value = "tag", required = false) String tagName,
+                                            @RequestParam(value = "sort", required = false) String sortType,
+                                            @RequestParam(value = "direction", required = false) String direction,
+                                            @RequestParam(required = false) Integer limit,
+                                            @RequestParam(required = false) Integer offset) {
         if (!GiftEntityValidator.correctOptionalParameters(name, description, tagName, sortType, direction)) {
             throw exceptionProvider.wrongParameterFormatException(ErrorCode.WRONG_OPTIONAL_PARAMETERS);
         }
@@ -104,8 +76,8 @@ public class GiftCertificateController {
         if (!GiftCertificateValidator.isGiftCertificateDataCorrect(certificate)) {
             throw exceptionProvider.wrongParameterFormatException(ErrorCode.CERTIFICATE_WRONG_PARAMETERS);
         }
-        GiftCertificateDto created = service.add(certificate);
-        return addSelfLink(created);
+        GiftCertificateDto createdCertificate = service.add(certificate);
+        return addSelfLink(createdCertificate);
     }
 
     /**
@@ -130,4 +102,30 @@ public class GiftCertificateController {
         return service.delete(id);
     }
 
+    /**
+     * Method adds HATEOAS link to GiftCertificateDTO entity
+     *
+     * @param certificate the certificate
+     * @return the gift certificate dto
+     */
+    public static GiftCertificateDto addSelfLink(GiftCertificateDto certificate) {
+        if (certificate.getTags() != null) {
+            certificate.setTags(
+                    certificate.getTags().stream().map(TagController::addLinks).collect(Collectors.toList())
+            );
+        }
+        return certificate
+                .add(linkTo(methodOn(GiftCertificateController.class).findById(certificate.getId())).withSelfRel())
+                .add(linkTo(GiftCertificateController.class)
+                        .withRel(HateoasData.POST)
+                        .withName(HateoasData.ADD_CERTIFICATE))
+                .add(linkTo(methodOn(GiftCertificateController.class)
+                        .findById(certificate.getId()))
+                        .withRel(HateoasData.PATCH)
+                        .withName(HateoasData.UPDATE_CERTIFICATE_FIELDS))
+                .add(linkTo(methodOn(GiftCertificateController.class)
+                        .findById(certificate.getId()))
+                        .withRel(HateoasData.DELETE)
+                        .withName(HateoasData.DELETE_CERTIFICATE));
+    }
 }

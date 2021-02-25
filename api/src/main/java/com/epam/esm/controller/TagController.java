@@ -23,26 +23,6 @@ public class TagController {
     private TagService service;
     private ExceptionProvider exceptionProvider;
 
-    /**
-     * Method adds HATEOAS link to TagDTO entity
-     *
-     * @param tag the tag
-     * @return the tag dto
-     */
-    static TagDto addLinks(TagDto tag) {
-        return tag
-                .add(linkTo(TagController.class).slash(tag.getId()).withSelfRel())
-                .add(linkTo(TagController.class)
-                        .withRel(HateoasData.POST)
-                        .withName(HateoasData.ADD_TAG))
-                .add(linkTo(TagController.class).slash(tag.getId())
-                        .withRel(HateoasData.PUT)
-                        .withName(HateoasData.UPDATE_TAG))
-                .add(linkTo(TagController.class).slash(tag.getId())
-                        .withRel(HateoasData.DELETE)
-                        .withName(HateoasData.DELETE_TAG));
-    }
-
     @Autowired
     public void setService(TagService service) {
         this.service = service;
@@ -90,5 +70,22 @@ public class TagController {
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable int id) {
         return service.delete(id);
+    }
+
+    /**
+     * Method adds HATEOAS link to TagDTO entity
+     *
+     * @param tag the tag
+     * @return the tag dto
+     */
+    public static TagDto addLinks(TagDto tag) {
+        return tag
+                .add(linkTo(TagController.class).slash(tag.getId()).withSelfRel())
+                .add(linkTo(TagController.class)
+                        .withRel(HateoasData.POST)
+                        .withName(HateoasData.ADD_TAG))
+                .add(linkTo(TagController.class).slash(tag.getId())
+                        .withRel(HateoasData.DELETE)
+                        .withName(HateoasData.DELETE_TAG));
     }
 }

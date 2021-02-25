@@ -1,5 +1,8 @@
-rootProject.name = 'SpringRestTask'
+rootProject.name = 'SpringBootRestTask'
 include 'api'
 include 'dao'
 include 'service'
+project(':dao').projectDir = file('dao')
+project(':service').projectDir = file('service')
+project(':api').projectDir = file('api')
 

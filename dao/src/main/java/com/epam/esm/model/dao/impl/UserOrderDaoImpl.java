@@ -17,7 +17,7 @@ public class UserOrderDaoImpl implements UserOrderDao {
     private static final String JPQL_FIND_USER_ORDERS = "select o from Order o where o.user.id = ?1";
     private static final String SELECT_MOST_POPULAR_TAG_OF_USER =
             "SELECT tag_id FROM (SELECT tag_id, COUNT(tag_id) AS most_popular \n" +
-                    "FROM `order` JOIN certificate_tag ON `order`.certificate_id=certificate_tag.gift_certificate_id \n" +
+                    "FROM `user_order` JOIN gift_to_tag ON `user_order`.certificate_id=gift_to_tag.gift_certificate_id \n" +
                     "WHERE user_id = ?\n" +
                     "GROUP BY tag_id\n" +
                     "order BY most_popular DESC\n" +
