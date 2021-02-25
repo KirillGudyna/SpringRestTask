@@ -1,63 +1,59 @@
 package com.epam.esm.service.impl;
 
-import com.epam.esm.model.dao.CertificateTagDao;
+import com.epam.esm.dto.TagDto;
 import com.epam.esm.model.dao.TagDao;
 import com.epam.esm.model.entity.Tag;
 import com.epam.esm.service.TagService;
+import com.epam.esm.util.DtoWrapper;
+import com.epam.esm.util.EntityWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TagServiceImpl implements TagService {
-    private TagDao dao;
-    private CertificateTagDao giftCertificateTagDao;
-    private TransactionTemplate transactionTemplate;
+    private TagDao tagDao;
 
     public TagServiceImpl() {
     }
 
-    public TagServiceImpl(TagDao dao, CertificateTagDao giftCertificateTagDao, TransactionTemplate transactionTemplate) {
-        this.dao = dao;
-        this.giftCertificateTagDao = giftCertificateTagDao;
-        this.transactionTemplate = transactionTemplate;
+    public TagServiceImpl(TagDao tagDao) {
+        this.tagDao = tagDao;
+
     }
 
     @Autowired
-    public void setDao(TagDao dao) {
-        this.dao = dao;
+    public void setTagDao(TagDao tagDao) {
+        this.tagDao = tagDao;
     }
 
-    @Autowired
-    public void setGiftCertificateTagDao(CertificateTagDao giftCertificateTagDao) {
-        this.giftCertificateTagDao = giftCertificateTagDao;
+    @Override
+    public Optional<TagDto> findById(long id) {
+        return tagDao.findById(id).map(DtoWrapper::toTagDto);
     }
 
-    @Autowired
-    public void setPlatformTransactionManager(PlatformTransactionManager platformTransactionManager) {
-        this.transactionTemplate = new TransactionTemplate(platformTransactionManager);
+    @Override
+    public List<TagDto> findAll(Integer limit, Integer offset) {
+        return tagDao.findAll(limit, offset)
+                .stream()
+                .map(DtoWrapper::toTagDto)
+                .collect(Collectors.toList());
     }
 
-    public Optional<Tag> findById(long id) {
-        return dao.findById(id);
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public TagDto add(TagDto tagDto) {
+        Optional<Tag> optionalTag = tagDao.findById(tagDto.getId());
+        return optionalTag.map(DtoWrapper::toTagDto).orElseGet(() -> DtoWrapper.toTagDto(tagDao.add(EntityWrapper.toTag(tagDto))));
     }
 
-    public List<Tag> findAll() {
-        return dao.findAll();
-    }
-
-    public Tag add(Tag entity) {
-        return dao.add(entity);
-    }
-
+    @Override
     public boolean delete(long id) {
-        return this.transactionTemplate.execute(transactionStatus -> {
-            giftCertificateTagDao.deleteByTagId(id);
-            return dao.delete(id);
-        });
+        return tagDao.delete(id);
     }
 }
