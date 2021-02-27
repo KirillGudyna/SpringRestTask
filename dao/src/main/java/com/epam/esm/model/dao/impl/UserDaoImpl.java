@@ -18,6 +18,7 @@ public class UserDaoImpl implements UserDao {
             "SELECT user_id FROM \n" +
                     "(SELECT user_id, SUM(cost) AS total_cost FROM `user_order`\n" +
                     "GROUP BY user_id order BY total_cost DESC LIMIT 1) AS tmp";
+    private static final String JPQL_FIND_USER_BY_NAME = "SELECT e FROM User e WHERE e.email = :email";
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -46,4 +47,12 @@ public class UserDaoImpl implements UserDao {
         }
         return query.getResultList();
     }
+
+    @Override
+    public Optional<User> findUserByEmail(String email){
+        TypedQuery<User> query = entityManager.createQuery(JPQL_FIND_USER_BY_NAME,User.class);
+        query.setParameter("email",email);
+        return Optional.ofNullable(query.getSingleResult());
+    }
+
 }

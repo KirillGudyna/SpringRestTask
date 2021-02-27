@@ -8,8 +8,10 @@ import com.epam.esm.util.HateoasData;
 import com.epam.esm.validation.GiftCertificateValidator;
 import com.epam.esm.validation.GiftEntityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.PermitAll;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +42,7 @@ public class GiftCertificateController {
      * Optionally could be used with different parameters for filtering and sorting.
      */
     @GetMapping
+    @PermitAll
     public List<GiftCertificateDto> findAll(@RequestParam(value = "name", required = false) String name,
                                             @RequestParam(value = "description", required = false) String description,
                                             @RequestParam(value = "tag", required = false) String tagName,
@@ -60,6 +63,7 @@ public class GiftCertificateController {
      * End point for finding gift certificate by id request.
      */
     @GetMapping("/{id:^[1-9]\\d{0,18}$}")
+    @PermitAll
     public GiftCertificateDto findById(@PathVariable long id) {
         GiftCertificateDto giftCertificate = service.findById(id)
                 .orElseThrow(
@@ -72,6 +76,7 @@ public class GiftCertificateController {
      * End point for adding new gift certificate request.
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('certificate:write')")
     public GiftCertificateDto create(@RequestBody GiftCertificateDto certificate) {
         if (!GiftCertificateValidator.isGiftCertificateDataCorrect(certificate)) {
             throw exceptionProvider.wrongParameterFormatException(ErrorCode.CERTIFICATE_WRONG_PARAMETERS);
@@ -84,6 +89,7 @@ public class GiftCertificateController {
      * End point for updating gift certificate request.
      */
     @PatchMapping("/{id:^[1-9]\\d{0,18}$}")
+    @PreAuthorize("hasAuthority('certificate:update')")
     public GiftCertificateDto update(@RequestBody GiftCertificateDto certificate, @PathVariable long id) {
         if (!GiftCertificateValidator.isGiftCertificateOptionalDataCorrect(certificate)) {
             throw exceptionProvider.wrongParameterFormatException(ErrorCode.CERTIFICATE_WRONG_PARAMETERS);
@@ -98,6 +104,7 @@ public class GiftCertificateController {
      * End point for deleting gift certificate request.
      */
     @DeleteMapping("/{id:^[1-9]\\d{0,18}$}")
+    @PreAuthorize("hasAuthority('certificate:delete')")
     public boolean delete(@PathVariable long id) {
         return service.delete(id);
     }

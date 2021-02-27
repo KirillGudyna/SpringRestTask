@@ -10,8 +10,10 @@ import com.epam.esm.util.ErrorCode;
 import com.epam.esm.util.HateoasData;
 import com.epam.esm.validation.GiftEntityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.PermitAll;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('user:read')")
     public List<UserDto> findAll(@RequestParam(required = false) Integer limit,
                                  @RequestParam(required = false) Integer offset) {
         List<UserDto> users = userService.findAll(limit, offset);
@@ -53,6 +56,7 @@ public class UserController {
 
 
     @GetMapping("/{id:^[1-9]\\d{0,18}$}")
+    @PreAuthorize("hasAuthority('user:read')")
     public UserDto findById(@PathVariable long id) {
         UserDto user = userService.findById(id).orElseThrow(
                 () -> exceptionProvider.giftEntityNotFoundException(ErrorCode.USER_NOT_FOUND)
@@ -61,6 +65,7 @@ public class UserController {
     }
 
     @PostMapping("/{userId:^[1-9]\\d{0,18}$}/orders")
+    @PreAuthorize("hasAuthority('user:order_create')")
     public OrderDto buyCertificate(@PathVariable long userId, @RequestBody long certificateId) {
         if (!GiftEntityValidator.correctId(certificateId)) {
             throw exceptionProvider.wrongParameterFormatException(ErrorCode.BUY_PARAMETERS_WRONG_FORMAT);
@@ -70,6 +75,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId:^[1-9]\\d{0,18}$}/orders")
+    @PreAuthorize("hasAuthority('user:read')")
     public List<OrderDto> findUserOrders(@PathVariable long userId,
                                          @RequestParam(required = false) Integer limit,
                                          @RequestParam(required = false) Integer offset) {
@@ -78,6 +84,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId:^[1-9]\\d{0,18}$}/orders/{orderId:^[1-9]\\d{0,18}$}")
+    @PreAuthorize("hasAuthority('user:read')")
     public OrderDto findUserOrder(@PathVariable long userId,
                                   @PathVariable long orderId) {
         Optional<OrderDto> optional = userOrderService.findUserOrderById(userId, orderId);
@@ -87,6 +94,7 @@ public class UserController {
     }
 
     @GetMapping("/widely-used-tag")
+    @PermitAll
     public TagDto widelyUsedTag() {
         TagDto tag = userService.mostWidelyUsedTagOfUserWithHighestOrdersSum().orElseThrow(
                 () -> exceptionProvider.giftEntityNotFoundException(ErrorCode.TAG_NOT_FOUND)

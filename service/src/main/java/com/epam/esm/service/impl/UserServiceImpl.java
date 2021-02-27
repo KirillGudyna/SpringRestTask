@@ -42,6 +42,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<UserDto> findByEmail(String email) {
+        return userDao.findUserByEmail(email).map(DtoWrapper::toUserDto);
+    }
+
+    @Override
     @Transactional
     public Optional<TagDto> mostWidelyUsedTagOfUserWithHighestOrdersSum() {
         Long userId = userDao.findUserIdWithHighestOrderSum();

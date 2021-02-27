@@ -7,8 +7,10 @@ import com.epam.esm.service.TagService;
 import com.epam.esm.util.HateoasData;
 import com.epam.esm.validation.TagValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.PermitAll;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +39,7 @@ public class TagController {
      * End point for findAllTags request.
      */
     @GetMapping
+    @PermitAll
     public List<TagDto> findAll(@RequestParam(required = false) Integer limit, @RequestParam(required = false) Integer offset) {
         return service.findAll(limit, offset)
                 .stream()
@@ -48,6 +51,7 @@ public class TagController {
      * End point for finding tag by id request.
      */
     @GetMapping("/{id}")
+    @PermitAll
     public TagDto findById(@PathVariable long id) {
         TagDto tagDto = service.findById(id).orElseThrow(() -> exceptionProvider.giftEntityNotFoundException(ErrorCode.TAG_NOT_FOUND));
         return addLinks(tagDto);
@@ -57,6 +61,7 @@ public class TagController {
      * End point for updating tag request.
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('tag:write')")
     public TagDto create(@RequestBody TagDto tagDto) {
         if (!TagValidator.isTagCorrect(tagDto)) {
             throw exceptionProvider.wrongParameterFormatException(ErrorCode.TAG_WRONG_PARAMETERS);
@@ -67,6 +72,7 @@ public class TagController {
     /**
      * End point for deleting tag request.
      */
+    @PreAuthorize("hasAuthority('tag:delete')")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable int id) {
         return service.delete(id);

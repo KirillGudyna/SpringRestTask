@@ -3,23 +3,21 @@ package com.epam.esm.service.impl;
 import com.epam.esm.dto.GiftCertificateDto;
 import com.epam.esm.model.dao.GiftCertificateDao;
 import com.epam.esm.model.dao.TagDao;
-import com.epam.esm.model.dao.impl.GiftCertificateDaoImpl;
 import com.epam.esm.model.entity.GiftCertificate;
 import com.epam.esm.model.entity.Tag;
-import com.epam.esm.service.GiftCertificateService;
 import com.epam.esm.model.util.DateTimeUtil;
+import com.epam.esm.service.GiftCertificateService;
 import com.epam.esm.util.DtoWrapper;
 import com.epam.esm.util.EntityWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 @Service
 public class GiftCertificateServiceImpl implements GiftCertificateService {
