@@ -36,7 +36,7 @@ public class DtoWrapper {
     }
 
     public static UserDto toUserDto(User user){
-        return new UserDto(user.getId(), user.getName());
+        return new UserDto(user.getId(), user.getName(), user.getSecondName(), user.getEmail(), user.getRole());
     }
 
     public static OrderDto toOrderDto(Order order){

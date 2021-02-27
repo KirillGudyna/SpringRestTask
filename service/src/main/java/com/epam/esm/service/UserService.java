@@ -11,5 +11,7 @@ public interface UserService {
 
     List<UserDto> findAll(Integer limit, Integer offset);
 
+    Optional<UserDto> findByEmail(String email);
+
     Optional<TagDto> mostWidelyUsedTagOfUserWithHighestOrdersSum();
 }

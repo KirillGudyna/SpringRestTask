@@ -11,4 +11,6 @@ public interface UserDao {
     List<User> findAll(Integer limit, Integer offset);
 
     Long findUserIdWithHighestOrderSum();
+
+    Optional<User> findUserByEmail(String name);
 }
